@@ -1,0 +1,53 @@
+---
+title: "RNA Editing"
+author: "Meg Mindlin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+library(ape)
+```
+
+
+
+```{r}
+high.priority=read.csv("high_priority_blasted.csv")
+edits.sig=read.csv("sig_edits.csv")
+```
+
+
+```{r}
+zf=
+edits.sig[
+  edits.sig$genomic_aa!=edits.sig$edited_aa&
+  edits.sig$gdna_con=="A"&
+  edits.sig$edited=="G"&
+  grepl("z.*n.*finger",edits.sig$protein_name,ignore.case = T)
+,]
+```
+
+
+# making the filtered fasta file
+making a fasta file with only the ORFs containing high priority edits
+First, I unzip the zip file that has the large fasta file in it
+```{bash, eval=F}
+unzip rubescens_transcriptome_ORF_ignore_nested.zip
+```
+
+then read it into R and make a new fasta that only has the high priority edits
+```{r, eval=F}
+ORF=read.dna('rubescens_transcriptome_ORF_ignore_nested.fasta', format='fasta')
+zf.orf=ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% zf$orf]
+zf.aa=trans(zf.orf)
+write.dna(zf.orf,"zf_orf.fasta",format="fasta",colsep="")
+
+write.dna(zf.aa,"zf_aa.fasta",format="fasta",colsep="")
+
+
+```
+
+Then I remove the large fasta.
+```{bash, eval=F}
+rm rubescens_transcriptome_ORF_ignore_nested.fasta
+```
