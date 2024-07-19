@@ -1,0 +1,31 @@
+---
+title: "Identifying Workable Edits"
+author: "Meg Mindlin"
+date: "2024-07-18"
+output: word_document
+---
+```{r}
+library(ape)
+```
+
+```{r}
+edits.sig=read.csv("sig_edits.csv")
+```
+
+```{r}
+zf=
+edits.sig[
+  edits.sig$genomic_aa!=edits.sig$edited_aa&
+  edits.sig$gdna_con=="A"&
+  edits.sig$edited=="G"& 
+]
+```
+
+```{bash, eval=F}
+unzip rubescens_transcriptome_ORF_ignore_nested.zip
+```
+
+```{r, eval=F}
+ORF=read.dna('rubescens_transcriptome_ORF_ignore_nested.fasta', format='fasta')
+```
+
