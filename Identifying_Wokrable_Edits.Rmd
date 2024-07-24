@@ -13,12 +13,13 @@ edits.sig=read.csv("sig_edits.csv")
 ```
 
 ```{r}
-zf=
+AtoG.nonsyn=
 edits.sig[
   edits.sig$genomic_aa!=edits.sig$edited_aa&
   edits.sig$gdna_con=="A"&
-  edits.sig$edited=="G"& 
+  edits.sig$edited=="G", 
 ]
+write.csv(AtoG.nonsyn, file = "AtoG_nonsyn_sig_edits.csv",row.names = F)
 ```
 
 ```{bash, eval=F}
@@ -27,5 +28,14 @@ unzip rubescens_transcriptome_ORF_ignore_nested.zip
 
 ```{r, eval=F}
 ORF=read.dna('rubescens_transcriptome_ORF_ignore_nested.fasta', format='fasta')
+AtoG.orf=ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% AtoG.nonsyn$orf]
+AtoG.aa=trans(AtoG.orf)
+write.dna(AtoG.orf,"AtoG_orf.fasta",format="fasta",colsep="")
+
+write.dna(AtoG.aa,"AtoG_aa.fasta",format="fasta",colsep="")
+```
+
+```{r}
+length(AtoG.orf)
 ```
 

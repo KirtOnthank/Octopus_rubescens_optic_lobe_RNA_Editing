@@ -1,0 +1,8 @@
+; PWMs predicted by SVMp method
+; for clusters of ZFs connected by linkers of 10 amino acids or less
+; SVM parameters: temperature=0.25, alpha=0.75
+; 
+; If you use these results in your publication, please cite:
+; Anton Persikov and Mona Singh (2014) "De Novo Prediction of DNA-binding
+; Specificities for Cys2His2 Zinc Finger Proteins". NAR, 42(1): 97-108.
+; 

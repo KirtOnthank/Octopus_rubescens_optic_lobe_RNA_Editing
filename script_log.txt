@@ -1,0 +1,2 @@
+Unedited file saved to: unedited_AtoG_orf.fasta
+Edited file saved to: edited_AtoG_orf.fasta
