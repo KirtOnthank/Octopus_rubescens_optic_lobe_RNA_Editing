@@ -57,13 +57,13 @@ This calls the script that takes the fasta with only the ORF sequences from nons
 python3 make_edits_in_fasta.py AtoG_nonsyn_sig_edits.csv AtoG_orf.fasta
 ```
 
-reading in edited and unedited fasta files
+Reading in edited and unedited fasta files
 ```{r}
 edited=read.dna('AtoG_orf_edited.fasta',format='fasta')
 unedited=read.dna('AtoG_orf_unedited.fasta',format='fasta')
 ```
 
-
+Then writing out the amino acid translations of those ORFs.
 ```{r}
 write.dna(trans(edited),"AtoG_aa_edited.fasta",format="fasta",colsep="")
 write.dna(trans(unedited),"AtoG_aa_unedited.fasta",format="fasta",colsep="")
