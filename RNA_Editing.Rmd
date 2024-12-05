@@ -107,3 +107,12 @@ write.dna(ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% nonident],"Zinc_fingers_
 write.csv(AtoG.nonsyn[AtoG.nonsyn$orf %in% nonident,],"zinc_fingers_that_change.csv",row.names = F)
 ```
 
+```{r}
+edits.sig[edits.sig$orf=="lcl|TRINITY_DN90_c0_g1_i16:425-2539",]
+```
+
+```{r}
+AtoG.nonsyn[grepl("425-2539",AtoG.nonsyn$orf),]
+```
+
+
