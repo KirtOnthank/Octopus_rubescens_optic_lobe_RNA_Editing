@@ -50,3 +50,6 @@ rsconnect/
 
 # Stupid mac files
 ._*
+
+# Don't sync stupid large fasta files
+rubescens_transcriptome_ORF_ignore_nested.fasta
