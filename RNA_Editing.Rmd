@@ -2,7 +2,7 @@
 title: "RNA Editing"
 author: "Meg Mindlin"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 ```{r}
@@ -16,7 +16,7 @@ high.priority=read.csv("high_priority_blasted.csv")
 edits.sig=read.csv("sig_edits.csv")
 ```
 
-
+# Pulling ORFs that are annotated to be zinc fingers from the SWISSPROT annotations.  However, we don't use this anymore (because we predict them with PWM Predict), so we can probably delete this. But double check first.
 ```{r}
 zf=
 edits.sig[
@@ -46,6 +46,36 @@ write.dna(zf.aa,"zf_aa.fasta",format="fasta",colsep="")
 
 
 ```
+
+```{r}
+write.dna(trans(ORF),"ORF_aa.fasta",format="fasta",colsep="")
+```
+
+
+# copy transcriptome fasta to pwm_predict folder
+```{bash}
+cp ORF_aa.fasta pwm_predict
+```
+
+```{bash}
+grep -c "^>" ORF_aa.fasta
+```
+
+# how many zinc fingers are in the entire transcriptome
+```{bash}
+cd pwm_predict/
+./pwm_predict -m SVMp ORF_aa.fasta
+```
+
+```{bash}
+mv pwm_predict/ORF_aa.pwm .
+```
+
+```{bash}
+grep -c "^>" ORF_aa.pwm 
+```
+
+
 
 Then I remove the large fasta.
 ```{bash, eval=F}
@@ -97,7 +127,7 @@ seqtk seq -q 3 -n N AtoG_aa_edited_zf_targets.fastq > AtoG_aa_edited_zf_targets_
 seqtk seq -q 3 -n N AtoG_aa_unedited_zf_targets.fastq > AtoG_aa_unedited_zf_targets_N.fastq
 ```
 
-Finding ORFs for which the editing and unedited have different targets
+Finding ORFs for which the edited and unedited have different targets
 ```{bash}
 python3 compare_fastq.py
 ```
@@ -108,12 +138,13 @@ write.dna(ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% nonident],"Zinc_fingers_
 write.csv(AtoG.nonsyn[AtoG.nonsyn$orf %in% nonident,],"zinc_fingers_that_change.csv",row.names = F)
 ```
 
-```{r}
-edits.sig[edits.sig$orf=="lcl|TRINITY_DN90_c0_g1_i16:425-2539",]
+Adding @ to the beginning of the headers so that they would they would match
+```{bash}
+sed -i 's/^/@/' non_identical_headers.txt
 ```
 
-```{r}
-AtoG.nonsyn[grepl("425-2539",AtoG.nonsyn$orf),]
+```{bash}
+seqtk subseq AtoG_aa_edited_zf_targets.fastq non_identical_headers.txt > subset.fastq
 ```
 
 
