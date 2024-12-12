@@ -7,6 +7,7 @@ output: html_document
 
 ```{r}
 library(ape)
+library(Rsamtools)
 ```
 
 
@@ -133,7 +134,7 @@ python3 compare_fastq.py
 ```
 
 ```{r}
-nonident=read.table("non_identical_headers.txt")[,1]
+nonident=read.csv("non_identical_headers.txt")[,1]
 write.dna(ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% nonident],"Zinc_fingers_that_change.fasta",format="fasta",colsep="")
 write.csv(AtoG.nonsyn[AtoG.nonsyn$orf %in% nonident,],"zinc_fingers_that_change.csv",row.names = F)
 ```
@@ -144,7 +145,68 @@ sed -i 's/^/@/' non_identical_headers.txt
 ```
 
 ```{bash}
-seqtk subseq AtoG_aa_edited_zf_targets.fastq non_identical_headers.txt > subset.fastq
+seqtk subseq AtoG_aa_edited_zf_targets.fastq non_identical_headers.txt > nonident_targets_edited.fastq
+seqtk subseq AtoG_aa_unedited_zf_targets.fastq non_identical_headers.txt > nonident_targets_unedited.fastq
 ```
 
+# Aligning to transcriptome
+The next three chunks are done in the Work folder on the genomics computer (/media/work)
+preparing transcriptome
+```{bash}
+STAR --runThreadN 20  	--runMode genomeGenerate  	--genomeDir /media/work/ruby_trans_alignment/genomeDir  	--genomeFastaFiles /media/work/ruby_trans_alignment/Trinity.fasta  	--genomeSAindexNbases 12  --limitGenomeGenerateRAM 204889114890
+```
+
+
+```{bash}
+STAR --runThreadN 20 --genomeDir /media/work/ruby_trans_alignment/genomeDir --readFilesIn /media/work/ruby_trans_alignment/nonident_targets_edited.fastq --outFileNamePrefix edited_targets --outSAMtype BAM Unsorted --outSAMprimaryFlag OneBestScore --outSAMmultNmax 1
+```
+
+```{bash}
+STAR --runThreadN 20 --genomeDir /media/work/ruby_trans_alignment/genomeDir --readFilesIn /media/work/ruby_trans_alignment/nonident_targets_unedited.fastq --outFileNamePrefix unedited_targets --outSAMtype BAM Unsorted --outSAMprimaryFlag OneBestScore --outSAMmultNmax 1
+```
+
+copying SAM files back to Genomics_Sync folder
+```{bash}
+cp edited_targetsAligned.out.bam /home/onthank/Documents/Genomics_Sync/Octopus_rubescens_optic_lobe_RNA_Editing/
+
+cp unedited_targetsAligned.out.bam /home/onthank/Documents/Genomics_Sync/Octopus_rubescens_optic_lobe_RNA_Editing/
+```
+
+```{r}
+unedited.aligned=scanBam("unedited_targetsAligned.out.bam", param = ScanBamParam(what = c("qname", "rname")))
+edited.aligned=scanBam("edited_targetsAligned.out.bam", param = ScanBamParam(what = c("qname", "rname")))
+```
+
+```{r}
+# Ensure rname columns from BAM alignments are treated as characters
+unedited_headers <- unedited.aligned[[1]]$qname  # Headers from unedited BAM
+unedited_references <- as.character(unedited.aligned[[1]]$rname)  # References from unedited BAM as characters
+
+edited_headers <- edited.aligned[[1]]$qname  # Headers from edited BAM
+edited_references <- as.character(edited.aligned[[1]]$rname)  # References from edited BAM as characters
+
+# Create named vectors for easier lookup
+unedited_alignment <- setNames(unedited_references, unedited_headers)
+edited_alignment <- setNames(edited_references, edited_headers)
+
+# Extract the truncated portion of nonident headers (before the first space)
+truncated_nonident <- sapply(strsplit(nonident, " "), `[`, 1)
+
+# Create the final table, matching on the truncated headers
+result_table <- data.frame(
+  Sequence = nonident,  # Full headers from nonident
+  Edited_Aligned_To = ifelse(truncated_nonident %in% names(edited_alignment),
+                             edited_alignment[truncated_nonident], NA),
+  Unedited_Aligned_To = ifelse(truncated_nonident %in% names(unedited_alignment),
+                               unedited_alignment[truncated_nonident], NA),
+  stringsAsFactors = FALSE  # Ensure the resulting table columns are characters
+)
+
+# View the result
+print(result_table)
+
+# Save the result as a CSV file
+write.csv(result_table, "ZF-transcriptome_alignment_table.csv", row.names = FALSE)
+
+```
 
