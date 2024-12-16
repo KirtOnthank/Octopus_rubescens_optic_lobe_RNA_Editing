@@ -150,25 +150,29 @@ seqtk subseq AtoG_aa_unedited_zf_targets.fastq non_identical_headers.txt > nonid
 ```
 
 # Aligning to transcriptome
-The next three chunks are done in the Work folder on the genomics computer (/media/work)
+The next four chunks are done in the Work folder on the genomics computer (/media/work/ruby_trans_alignment)
 preparing transcriptome
 ```{bash}
+# Only need to run this once.
+cd /media/work/ruby_trans_alignment
 STAR --runThreadN 20  	--runMode genomeGenerate  	--genomeDir /media/work/ruby_trans_alignment/genomeDir  	--genomeFastaFiles /media/work/ruby_trans_alignment/Trinity.fasta  	--genomeSAindexNbases 12  --limitGenomeGenerateRAM 204889114890
 ```
 
 
 ```{bash}
+cd /media/work/ruby_trans_alignment
 STAR --runThreadN 20 --genomeDir /media/work/ruby_trans_alignment/genomeDir --readFilesIn /media/work/ruby_trans_alignment/nonident_targets_edited.fastq --outFileNamePrefix edited_targets --outSAMtype BAM Unsorted --outSAMprimaryFlag OneBestScore --outSAMmultNmax 1
 ```
 
 ```{bash}
+cd /media/work/ruby_trans_alignment
 STAR --runThreadN 20 --genomeDir /media/work/ruby_trans_alignment/genomeDir --readFilesIn /media/work/ruby_trans_alignment/nonident_targets_unedited.fastq --outFileNamePrefix unedited_targets --outSAMtype BAM Unsorted --outSAMprimaryFlag OneBestScore --outSAMmultNmax 1
 ```
 
 copying SAM files back to Genomics_Sync folder
 ```{bash}
+cd /media/work/ruby_trans_alignment
 cp edited_targetsAligned.out.bam /home/onthank/Documents/Genomics_Sync/Octopus_rubescens_optic_lobe_RNA_Editing/
-
 cp unedited_targetsAligned.out.bam /home/onthank/Documents/Genomics_Sync/Octopus_rubescens_optic_lobe_RNA_Editing/
 ```
 
@@ -209,4 +213,11 @@ print(result_table)
 write.csv(result_table, "ZF-transcriptome_alignment_table.csv", row.names = FALSE)
 
 ```
+
+
+# alignment to genome
+```{r}
+
+```
+
 
