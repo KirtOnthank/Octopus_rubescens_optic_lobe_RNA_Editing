@@ -38,7 +38,7 @@ unzip rubescens_transcriptome_ORF_ignore_nested.zip
 
 then read it into R and make a new fasta that only has the high priority edits
 ```{r, eval=F}
-ORF=read.dna('rubescens_transcriptome_ORF_ignore_nested.fasta', format='fasta')
+ORF=read.dna('swissprotORF.fasta', format='fasta') # originally was rubescens_transcriptome_ORF_ignore_nested.fasta
 zf.orf=ORF[gsub("(.*) ORF.*","\\1",labels(ORF)) %in% zf$orf]
 zf.aa=trans(zf.orf)
 write.dna(zf.orf,"zf_orf.fasta",format="fasta",colsep="")
