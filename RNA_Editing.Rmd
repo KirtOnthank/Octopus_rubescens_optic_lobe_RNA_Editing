@@ -8,6 +8,10 @@ output: html_document
 ```{r}
 library(ape)
 library(Rsamtools)
+library(dplyr)
+library(stringr)
+library(Biostrings) # For handling FASTQ files
+library(ShortRead)
 ```
 
 
@@ -76,6 +80,40 @@ mv pwm_predict/ORF_aa.pwm .
 grep -c "^>" ORF_aa.pwm 
 ```
 
+converting the pwm to fastq
+```{bash}
+python3 scripts/pwm_to_fastq.py ORF_aa.pwm ORF_aa_zf_targets.fastq
+```
+
+Finding Zinc Fingers in different sets of edited genes
+```{r}
+
+
+# Read the FASTQ file
+fastq_data = readFastq("ORF_aa_zf_targets.fastq")
+
+# Extract the headers from the FASTQ file
+fastq_headers = sapply(strsplit(as.character(id(fastq_data)), " "), `[`, 1)
+
+# Getting logical of zinc fingers within edits.sig
+edits.sig.zf.logical = unique(edits.sig$orf) %in% fastq_headers
+
+# Count the number of matches
+print(paste("Number of genes bearing significant edits:",length(unique(edits.sig$orf))))
+print(paste("Number zinc fingers among genes bearing significant edits:",sum(edits.sig.zf.logical)))
+sum(edits.sig.zf.logical)/length(unique(edits.sig$orf))
+
+
+# Getting logical of zinc fingers within edits.sig
+high.priority.zf.logical = unique(high.priority$orf) %in% fastq_headers
+
+# Count the number of matches
+print(paste("Number of genes bearing high priority (top 50) edits:",length(unique(high.priority$orf))))
+print(paste("Number zinc fingers among genes bearing high priority (top 50) edits:",sum(high.priority.zf.logical)))
+sum(high.priority.zf.logical)/length(unique(high.priority$orf))
+
+
+```
 
 
 Then I remove the large fasta.
