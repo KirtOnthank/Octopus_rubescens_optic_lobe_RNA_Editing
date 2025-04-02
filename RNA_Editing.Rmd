@@ -12,6 +12,7 @@ library(dplyr)
 library(stringr)
 library(Biostrings) # For handling FASTQ files
 library(ShortRead)
+library(perm)
 ```
 
 
@@ -80,7 +81,7 @@ mv pwm_predict/ORF_aa.pwm .
 grep -c "^>" ORF_aa.pwm 
 ```
 
-converting the pwm to fastq
+converting the pwm to fastq of the zinc finger targets
 ```{bash}
 python3 scripts/pwm_to_fastq.py ORF_aa.pwm ORF_aa_zf_targets.fastq
 ```
@@ -114,6 +115,12 @@ sum(high.priority.zf.logical)/length(unique(high.priority$orf))
 
 
 ```
+
+```{r}
+edits.sig.zf=edits.sig[edits.sig.zf.logical,]
+
+```
+
 
 
 Then I remove the large fasta.
@@ -252,10 +259,96 @@ write.csv(result_table, "ZF-transcriptome_alignment_table.csv", row.names = FALS
 
 ```
 
+# ZF transcripts have more significant edits than non-ZF transcripts
+We have already made an object called "fastq_headers" that has all of the zinc finger. I need to get each transcript only once.
+```{r}
+zf.unique=unique(fastq_headers)
+```
+
+```{r}
+ORF.names=names(ORF)
+ORF.names=sub(" .*", "", ORF.names)
+not.zf=ORF.names[!ORF.names %in% zf.unique]
+
+notzf.table=table(edits.sig$orf[edits.sig$orf %in% not.zf])
+zf.table=table(edits.sig$orf[edits.sig$orf %in% zf.unique])
+
+notzf.zeros=sum((!ORF.names %in% edits.sig$orf)&(!ORF.names %in% zf.unique))
+zf.zeros=sum((!ORF.names %in% edits.sig$orf)&(ORF.names %in% zf.unique))
+```
+
+```{r}
+notzf.numeric=c(as.numeric(notzf.table),rep(0,notzf.zeros))
+zf.numeric=c(as.numeric(zf.table),rep(0,zf.zeros))
+length(notzf.numeric)+length(zf.numeric)
+
+mean(notzf.numeric)
+mean(zf.numeric)
+
+permTS(notzf.numeric,zf.numeric)
+```
+
+```{r}
+
+hist(notzf.numeric,breaks=max(notzf.numeric)+1,xlim=c(0,10),freq=FALSE,ylim=c(0,1),col="#a53860")
+hist(zf.numeric,breaks=max(zf.numeric)+1,xlim=c(0,10),freq=FALSE,ylim=c(0,1),col="#ffa5ab")
+
+```
+
+
+```{r}
+table(edits.sig$orf)[table(edits.sig$orf)>=10]
+```
+
+```{r}
+png(filename="edit_distribution_histogram.png",height=1080,width=1920,pointsize=32)
+par(mar = c(4, 2, 0, 1),bg=NA) 
+
+# Define breaks
+breaks <- seq(0, max(c(notzf.numeric, zf.numeric)) + 1, by = 1)
+
+# Calculate histogram counts
+notzf.hist <- hist(notzf.numeric, breaks = breaks, plot = FALSE)
+zf.hist <- hist(zf.numeric, breaks = breaks, plot = FALSE)
+
+# Calculate proportions for normalized frequency
+notzf.prop <- notzf.hist$counts / sum(notzf.hist$counts)
+zf.prop <- zf.hist$counts / sum(zf.hist$counts)
+
+# Plot back-to-back histograms
+barplot(
+  -notzf.prop, names.arg = notzf.hist$mids, horiz = TRUE, beside = TRUE,
+  col = "#a53860", xlim = c(-1, 1), ylim = c(0, 11),
+  border = "black", space = 0, xaxt = "n", yaxt="n",
+  xlab = "Percent of Transcripts"
+)
+barplot(
+  zf.prop, add = TRUE, horiz = TRUE, beside = TRUE, col = "#da627d",
+  border = "black", space = 0, axes=F
+)
+
+mtext("Number of acidification-responsive edits",side=2,line=0.5)
+for (i in 1:11){
+  text(-notzf.prop[i]-0.035,i-0.5,i-1)
+}
+text(-.50,8,"Non-zinc finger containing transcripts")
+text(.50,8,"Zinc finger containing transcripts")
+# Add axis and legend
+axis(1, at = seq(-1, 1, by = 0.2), labels = abs(seq(-100, 100, by = 20)))
+#axis(2,at=seq(from=0.5, to =10.5, by=1), labels=0:10,lwd=0,las=2,line=-1.5)
+#legend(
+#  "topright", legend = c("Not ZF", "ZF"), fill = c("#a53860", "#ffa5ab"),
+#  border = "white"
+#)
+dev.off()
+```
+
+
 
 # alignment to genome
 ```{r}
 
 ```
+
 
 
